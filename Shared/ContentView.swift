@@ -20,6 +20,7 @@ let buttonRows = [
 
 struct ContentView: View {
     
+    @State var numBeingEntered: String = "" //This will save the number which our user is entering.
     
     // To hold final value of the evaluated expression
     @State var finalValue:String = "Calculator"
@@ -63,7 +64,31 @@ struct ContentView: View {
                             Spacer(minLength: 13)
                             ForEach(row, id: \.self) { column in
                                 Button(action: {
-                                    //Action to be added later.
+                                    if column == "=" {
+                                            self.calExpression = []
+                                            self.numBeingEntered = ""
+                                            return
+                                        } else if checkIfOperator(str: column)  {
+                                            self.calExpression.append(column)
+                                            self.numBeingEntered = ""
+                                        } else {
+                                            self.numBeingEntered.append(column)
+                                            if self.calExpression.count == 0 {
+                                                self.calExpression.append(self.numBeingEntered)
+                                            } else {
+                                                if !checkIfOperator(str: self.calExpression[self.calExpression.count-1]) {
+                                                    self.calExpression.remove(at: self.calExpression.count-1)
+                                                }
+
+                                                self.calExpression.append(self.numBeingEntered)
+                                            }
+                                        }
+
+                                        self.finalValue = processExpression(exp: self.calExpression)
+                                        // This code ensures that future operations are done on evaluated result rather than evaluating the expression from scratch.
+                                        if self.calExpression.count > 3 {
+                                            self.calExpression = [self.finalValue, self.calExpression[self.calExpression.count - 1]]
+                                        }
                                 }, label: {
                                     Text(column)
                                         .font(.system(size: getFontSize(btnTxt: column)))
@@ -129,6 +154,38 @@ struct ContentView: View {
         
         return false
         
+    }
+    
+    func processExpression(exp:[String]) -> String {
+        
+        if exp.count < 3 {
+            // Less than 3 means that expression doesnt contain the 2nd no.
+            return "0.0"
+        }
+        
+        var a = Double(exp[0])  // Get the first no
+        var c = Double("0.0")   // Init the second no
+        let expSize = exp.count
+        
+        for i in (1...expSize-2) {
+            
+            c = Double(exp[i+1])
+            
+            switch exp[i] {
+            case "+":
+                a! += c!
+            case "−":
+                a! -= c!
+            case "×":
+                a! *= c!
+            case "÷":
+                a! /= c!
+            default:
+                print("skipping the rest")
+            }
+        }
+        
+        return String(format: "%.1f", a!)
     }
 }
 
